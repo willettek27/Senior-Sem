@@ -4,7 +4,7 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 
 # Load the model and tokenizer
-model_name = "your-huggingface-model-name"
+model_name = "r3ddkahili/final-complete-malicious-url-model"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForSequenceClassification.from_pretrained(model_name)
 
