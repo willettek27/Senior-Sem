@@ -2,5 +2,6 @@
 # to add more libraries, just update requirements.txt and re-run
 # requirements.txt
 
+kagglehub
 transformers
 torch
