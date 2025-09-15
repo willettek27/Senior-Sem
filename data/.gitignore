@@ -1,1 +1,3 @@
-data/malicious_phish.csv
+*
+!.gitignore 
+
