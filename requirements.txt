@@ -4,5 +4,6 @@
 
 pip
 kagglehub
+flask
 transformers
 torch
