@@ -38,3 +38,6 @@ def prediction():
     predicted_label = label_map[predicted_class_id]
 
     return jsonify({"url": url, "prediction": predicted_label}) 
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)
