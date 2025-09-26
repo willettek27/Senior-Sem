@@ -34,7 +34,7 @@ function App() {
           width: "100%",
           background: "#bc667fff",
           boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-          height: "64px",
+          height: "80px",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -90,50 +90,48 @@ function App() {
       </header>
 
       <div
-        style={{
-          height: "100vh",
-          width: "100vw",
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "#f0ede9ff",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            textAlign: "center",
-            padding: "32px",
-            borderRadius: "12px",
-            background: "#fff",
-            boxShadow: "0 2px 12px rgba(0,0,0,0.07)",
-            marginTop: "-60px",
-            marginBottom: "30px",
-            boxSizing: "border-box",
-            width: "100%",
-            maxWidth: "1100px",
-            height: "380px",
-            justifyContent: "flex-start",
-          }}
-        >
-          <h1
-            style={{
-              marginBottom: "20px",
-              fontSize: "40px",
-              color: "#bc667fff",
-              width: "100%",
-              whiteSpace: "normal",
-              textOverflow: "ellipsis",
-              fontFamily: "Helvetica, Arial, Tahoma, sans-serif",
-            }}
-          >
-            Free website to detect malicious websites
-          </h1>
+  style={{
+    width: "100%",
+    minHeight: "100vh",
+    background: "#f0ede9ff",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    paddingTop: "90px",
+    paddingBottom: "40px",
+    
+    }}
+    >
+    <div
+    style={{
+      width: "100%",
+      maxWidth: "1100px",
+      background: "#fff",
+      borderRadius: "12px",
+      boxShadow: "0 2px 12px rgba(0,0,0,0.07)",
+      padding: "32px",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      textAlign: "center",
+      margin: "0 auto",
+    }}
+  >
+    <h1
+       style={{
+        marginBottom: "20px",
+        fontSize: "40px",
+        color: "#bc667fff",
+        width: "100%",
+        whiteSpace: "normal",
+        textOverflow: "ellipsis",
+        fontFamily: "Helvetica, Arial, Tahoma, sans-serif",
+      }}
+    >
+      Free website to detect malicious websites
+    </h1>
             
-          <div style={{ marginBottom: "16px", color: "#555", fontSize: "16px" }}>
+          <div style={{ marginBottom: "30px", marginTop: "10px", color: "#181616ff", fontSize: "23px" }}>
             Paste a website URL below and click <b>Scan</b> to check its safety.
           </div>
           <input
@@ -143,9 +141,9 @@ function App() {
             onChange={(e) => setUrl(e.target.value)}
             style={{
               width: "100%",
-              maxWidth: "600px",
+              maxWidth: "650px",
               padding: "10px",
-              fontSize: "18px",
+              fontSize: "20px",
               marginBottom: "20px",
             }}
             disabled={loading}
@@ -153,7 +151,7 @@ function App() {
 
           <br />
 
-          <button
+      <button
             onClick={handleScan}
             style={{
               padding: "10px 35px",
@@ -163,38 +161,171 @@ function App() {
               backgroundColor: "#bc667fff",
               color: "#fff",
               border: "none",
+              marginTop: "-5px",
               borderRadius: "2px",
               cursor: "pointer",
             }}
             disabled={loading || !url}
           >
             {loading ? "Scanning..." : "Scan"}
-          </button>
+      </button>
 
-          {result && (
-            <p
-              style={{
-                marginTop: "25px",
-                fontSize: "20px",
-                fontWeight: "bold",
-                color:
-                  result === "safe"
-                    ? "green"
-                    : result === "Malicious"
-                    ? "red"
-                    : "orange",
-              }}
-            >
-              Result: {result}
-            </p>
-          )}
-          {/* Info about the website below the whole box */}
-        <div style={{ marginTop: "8px", color: "#888", fontSize: "15px", maxWidth: "600px", textAlign: "center" }}>
-          <span role="img" aria-label="info">ℹ️</span> <b>Scanify</b> uses advanced AI to help keep you safe online.<br />
-          No URLs are stored. For educational use only.
-        </div>
-        </div>
-      </div>
+      {result && (
+        <p style={{
+          marginTop: "25px",
+          fontSize: "20px",
+          fontWeight: "bold",
+          color:
+            result === "Benign"
+              ? "green"
+              : result === "Defacement"
+              ? "#ff9800"
+              : result === "Phishing"
+              ? "#e53935"
+              : result === "Malware"
+              ? "#6a1b9a"
+              : "#fbc626ff",
+        }}>
+          Result: {result}
+        </p>
+      )}
+
+    </div>
+    <div style={{
+      margin: "28px auto 0 auto",
+      color: "#706d6dff",
+      fontSize: "15px",
+      maxWidth: "600px",
+      textAlign: "center"
+    }}>
+      <span role="img" aria-label="info">ℹ️</span> <b>Scanify</b> uses advanced AI to help keep you safe online.<br />
+      <span role="img" aria-label="lock">🔒</span> We do not store any URLs or personal data. Your privacy is our priority.
+    </div>
+  </div>
+<div
+  style={{
+    width: "100vw",
+    background: "#f0ede9ff",
+    display: "flex",
+    justifyContent: "center",
+    marginTop: "-200px",
+  }}
+  >
+    <h2
+      style={{
+        color: "#2d3748",
+        fontSize: "40px",
+        fontWeight: "bold",
+        textAlign: "center",
+        marginBottom: "15px",
+        letterSpacing: "1px",
+        marginTop: "0",
+        fontFamily: "Helvetica, Arial, Tahoma, sans-serif"
+      }}
+      >
+        Website Safety Tips & Info
+
+      </h2>
+  </div>
+<div
+  style={{
+    display: "flex",
+    justifyContent: "center",
+    gap: "30px",
+    background: "#f0ede9ff",
+    flexWrap: "wrap",
+    padding: "20px 0",
+  }}
+>
+  {/* Card 1: Why scan websites? */}
+  <div
+    style={{
+      background: "#fff",
+      borderRadius: "3px",
+      boxShadow: "0 2px 8px rgba(12, 6, 6, 0.07)",
+      padding: "24px 20px",
+      minWidth: "260px",
+      maxWidth: "320px",
+      textAlign: "center",
+      flex: "1 1 260px",
+      margin: "0 8px",
+    }}
+  >
+    <div style={{ fontSize: "2rem", marginBottom: "10px" }}>🔍</div>
+    <div style={{ fontWeight: "bold", fontSize: "20px", marginBottom: "8px" }}>Why scan websites?</div>
+    <div style={{ fontSize: "15px", color: "#342f2fff" }}>
+      Many sites hide malware, scams, or phishing. Scanning websites helps you detect threats before you click and harm your device.
+    </div>
+  </div>
+
+  {/* Card 2: How to spot a malicious site */}
+  <div
+    style={{
+      background: "#fff",
+      borderRadius: "3px",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.07)",
+      padding: "24px 20px",
+      minWidth: "260px",
+      maxWidth: "320px",
+      textAlign: "center",
+      flex: "1 1 260px",
+      margin: "0 8px",
+    }}
+  >
+    <div style={{ fontSize: "2rem", marginBottom: "10px" }}>🛑</div>
+    <div style={{ fontWeight: "bold", fontSize: "20px", marginBottom: "8px" }}>Signs of a malicious website</div>
+    <div style={{ fontSize: "15px", color: "#342f2fff" }}>
+      Look for odd URLs, pop-ups, requests for personal info, spelling mistakes, or warnings from your browser. Be careful with any links sent via email or social media.
+    </div>
+  </div>
+
+  {/* Card 3: How Scanify helps */}
+  <div
+    style={{
+      background: "#fff",
+      borderRadius: "3px",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.07)",
+      padding: "24px 20px",
+      minWidth: "260px",
+      maxWidth: "320px",
+      textAlign: "center",
+      flex: "1 1 260px",
+      margin: "0 8px",
+    }}
+  >
+    <div style={{ fontSize: "2rem", marginBottom: "10px" }}>🤖</div>
+    <div style={{ fontWeight: "bold", fontSize: "20px", marginBottom: "8px" }}>How Scanify protects you</div>
+    <div style={{ fontSize: "15px", color: "#342f2fff" }}>
+      Our modern tools check the URL for malicious code, phishing, and blacklists—giving you instant peace of mind.
+    </div>
+  </div>
+</div>
+
+
+<div
+  style={{
+    width: "100vw",
+    background: "#f0ede9ff",
+    display: "flex",
+    justifyContent: "center",
+  }}
+  >
+    <h2
+      style={{
+        color: "#2d3748",
+        fontSize: "40px",
+        fontWeight: "bold",
+        textAlign: "center",
+        marginBottom: "15px",
+        letterSpacing: "1px",
+
+        fontFamily: "Helvetica, Arial, Tahoma, sans-serif"
+      }}
+      >
+        How Scanify Works
+
+      </h2>
+  </div>
     </>
   );
 }
