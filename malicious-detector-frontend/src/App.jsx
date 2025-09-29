@@ -20,15 +20,17 @@ function App() {
       });
 
       const data = await response.json();
-      setResult(data.result);
+      setResult(data.prediction);
     } catch (error) {
       setResult("Error scanning URL");
+      console.error("Error:", error);
     }
     setLoading(false);
   };
 
   return (
     <>
+
       <header
         style={{
           width: "100%",
