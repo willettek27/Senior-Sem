@@ -9,14 +9,15 @@ tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForSequenceClassification.from_pretrained(model_name)
 
 # Example URL
-url = "http://example.com/login"
+urls = ["https://www.wikipedia.org", "https://google.com"]
 
 # Tokenize and predict
-inputs = tokenizer(url, return_tensors="pt", truncation=True, padding=True, max_length=128)
+inputs = tokenizer(urls, return_tensors="pt", truncation=True, padding=True, max_length=128)
 with torch.no_grad():
     outputs = model(**inputs)
-    prediction = torch.argmax(outputs.logits).item()
+    predictions = torch.argmax(outputs.logits, dim=1)
 
 # Mapping prediction to labels
 label_map = {0: "Benign", 1: "Defacement", 2: "Phishing", 3: "Malware"}
-print(f"Prediction: {label_map[prediction]}")
+for url, prediction in zip(urls, predictions):
+    print(f"URL: {url} - Prediction: {label_map[prediction.item()]}")
