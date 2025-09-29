@@ -1,12 +1,14 @@
 # app.py
 
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 import pandas as pd
 import os
 
 app = Flask(__name__)
+CORS(app)
 
 dataset_path = "data/malicious_phish.csv"
 if not os.path.exists(dataset_path):
@@ -59,7 +61,7 @@ def prediction():
         outputs = model(**entry)
     
     predicted_class_id = torch.argmax(outputs.logits, dim=1).item()
-    predicted_label = label_map[predicted_class_id]
+    predicted_label = label_map.get(predicted_class_id, "Unknown")
 
     return jsonify({
         "url": url,
