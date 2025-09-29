@@ -27,12 +27,12 @@ def prediction():
         return jsonify({"error": "No URL provided"}), 400
 
     # Tokenize the input URL
-    entry = tokenizer(url, return_tensors="pt", truncation=True, padding=True)
+    entry = tokenizer([url], return_tensors="pt", truncation=True, padding=True, max_length=128)
 
     # Get model predictions
     with torch.no_grad():
         outputs = model(**entry)
-
+    
     logits = outputs.logits
     predicted_class_id = torch.argmax(logits, dim=1).item()
     predicted_label = label_map[predicted_class_id]
