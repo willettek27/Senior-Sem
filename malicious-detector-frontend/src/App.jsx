@@ -213,13 +213,13 @@ function App() {
   >
     <h2
       style={{
-        color: "#2d3748",
+        color: "#bc667fff",
         fontSize: "40px",
         fontWeight: "bold",
         textAlign: "center",
         marginBottom: "15px",
         letterSpacing: "1px",
-        marginTop: "0",
+        marginTop: "-65px",
         fontFamily: "Helvetica, Arial, Tahoma, sans-serif"
       }}
       >
@@ -312,7 +312,7 @@ function App() {
   >
     <h2
       style={{
-        color: "#2d3748",
+        color:"#bc667fff",
         fontSize: "40px",
         fontWeight: "bold",
         textAlign: "center",
@@ -326,8 +326,167 @@ function App() {
 
       </h2>
   </div>
+  <div
+  style={{
+    display: "flex",
+    justifyContent: "center",
+    gap: "30px",
+    background: "#f0ede9ff",
+    flexWrap: "wrap",
+    padding: "20px 0",
+  }}
+>
+ <div
+  style={{
+    background: "#f9f9f9",
+    padding: "50px 20px",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+  }}
+>
+
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "flex-start",
+      width: "100%",
+      maxWidth: "900px",
+      marginBottom: "30px",
+    }}
+  >
+    <div
+      style={{
+        flex: "1",
+        background: "#fff",
+        padding: "25px",
+        borderRadius: "3px",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+      }}
+    >
+      <h3 style={{ fontSize: "24px", marginBottom: "10px" }}>🔗 URL Analysis</h3>
+      <p style={{ fontSize: "17px", color: "#555", lineHeight: "1.7" }}>
+        When you enter a website, Scanify inspects the link for suspicious
+        patterns, phishing attempts, and other known signs of danger.
+      </p>
+    </div>
+  </div>
+
+
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "flex-end",
+      width: "100%",
+      maxWidth: "900px",
+      marginBottom: "30px",
+    }}
+  >
+    <div
+      style={{
+        flex: "1",
+        background: "#fff",
+        padding: "25px",
+        borderRadius: "3px",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+      }}
+    >
+      <h3 style={{ fontSize: "24px", marginBottom: "10px" }}>🤖 AI Detection</h3>
+      <p style={{ fontSize: "17px", color: "#555", lineHeight: "1.7" }}>
+        Our AI model analyzes the site’s structure and content to detect malicious code that could harm your device.
+      </p>
+    </div>
+  </div>
+\
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "flex-start",
+      width: "100%",
+      maxWidth: "900px",
+      marginBottom: "30px",
+    }}
+  >
+    <div
+      style={{
+        flex: "1",
+        background: "#fff",
+        padding: "25px",
+        borderRadius: "3px",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+      }}
+    >
+      <h3 style={{ fontSize: "24px", marginBottom: "10px" }}>🛡️ Blacklist Check</h3>
+      <p style={{ fontSize: "17px", color: "#555", lineHeight: "1.7" }}>
+        Scanify compares the site against global threat databases to see if it
+        has been reported for malware, phishing, or malicious activity.
+      </p>
+    </div>
+  </div>
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "flex-end",
+      width: "100%",
+      maxWidth: "900px",
+    }}
+  >
+    <div
+      style={{
+        flex: "1",
+        background: "#fff",
+        padding: "25px",
+        borderRadius: "3px",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+      }}
+    >
+      <h3 style={{ fontSize: "24px", marginBottom: "10px" }}>⚡ Instant Results</h3>
+      <p style={{ fontSize: "17px", color: "#555", lineHeight: "1.7" }}>
+        Within seconds, Scanify provides a clear results benign, defacement, phishing, malware -
+        so you can decide whether to proceed safely.
+      </p>
+    </div>
+  </div>
+</div>
+</div>
+<footer
+        style={{
+          width: "100%",
+          background: "#bc667fff",
+          boxShadow: "0 -2px 8px rgba(0,0,0,0.04)",
+          height: "60px",
+          display: "flex",
+          marginTop: "40px",
+          alignItems: "center",
+          justifyContent: "center",
+          
+        }}
+      >
+        <div
+          style={{
+            width: "100%",
+            maxWidth: "1100px",
+            display: "flex",
+            marginLeft: "20px",
+             justifyContent: "space-between",
+            alignItems: "center",
+            padding: "0 32px",
+            color: "#fef6f6ff",
+            fontSize: "16px",
+          }}
+        >
+          <div>© 2025 Scanify. All rights reserved.</div>
+          <div>
+            <a href="#" style={{ color: "#fff", textDecoration: "none", marginRight: "17px" }}>Privacy Policy</a>
+            <a href="#" style={{ color: "#fff", textDecoration: "none" }}>Terms of Service</a>
+          </div>
+        </div>
+      </footer>
     </>
+
+
   );
+
 }
 
 export default App;
