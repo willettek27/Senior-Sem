@@ -5,6 +5,7 @@
 pip
 kagglehub
 flask
+flask-cors
 transformers
 torch
 pandas
