@@ -4,6 +4,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
+import torch.nn.functional as F
 import pandas as pd
 import os
 
@@ -15,23 +16,19 @@ if not os.path.exists(dataset_path):
     raise FileNotFoundError(f"Dataset file not found at {dataset_path}")
 
 dataset = pd.read_csv(dataset_path)
-
-dataset_dict = dict(zip(dataset['url'], dataset['type']))
+dataset_dict = dict(zip(dataset["url"].str.strip().str.lower(), dataset["type"]))
 
 # Load the model and tokenizer
 model_name = "r3ddkahili/final-complete-malicious-url-model"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForSequenceClassification.from_pretrained(model_name)
+model.eval()
 
 # Mapping prediction to labels
 label_map = {0: "Benign", 1: "Defacement", 2: "Phishing", 3: "Malware"}
 
 def preprocess_url(url: str) -> str:
-    url_clean = url.lower().strip()
-    url_clean = url_clean.replace("https://", "").replace("http://", "")
-    if url_clean.startswith("www."):
-        url_clean = url_clean[4:]
-    return url_clean
+    return url.strip().lower()
 
 
 @app.route("/")
@@ -46,27 +43,50 @@ def prediction():
     if not url:
         return jsonify({"error": "No URL provided"}), 400
 
-    preprocessed_url = preprocess_url(url)
+    preprocessed_url = url.strip().lower()
 
     # Check Kagglehub dataset first
     if preprocessed_url in dataset_dict:
-        return jsonify({
+        label = dataset_dict[preprocessed_url]
+        confidence = 1.0 if label.lower() == "benign" else 0.9
+        result = {
             "url": url,
-            "prediction": dataset_dict[preprocessed_url],
-        })
+            "prediction": label,
+            "source": "dataset",
+            "confidence": confidence
+        }
+        return jsonify(result)
+    
+    safe_domains = ["wikipedia.org", "google.com", "github.com", "stackoverflow.com", "example.com"]
+    if any(domain in preprocessed_url for domain in safe_domains):
+        result = {
+            "url": url,
+            "prediction": "Benign",
+            "source": "safe_domains",
+            "confidence": 1.0
+        }
+        return jsonify(result)
 
     # If not in dataset, use AI model
-    entry = tokenizer([preprocessed_url], return_tensors="pt", truncation=True, padding=True, max_length=128)
+    entry = tokenizer([url], return_tensors="pt", truncation=True, padding=True, max_length=128)
     with torch.no_grad():
         outputs = model(**entry)
-    
-    predicted_class_id = torch.argmax(outputs.logits, dim=1).item()
-    predicted_label = label_map.get(predicted_class_id, "Unknown")
+        probs = F.softmax(outputs.logits, dim=1)[0]
 
-    return jsonify({
-        "url": url,
-        "prediction": predicted_label,
-    })
+
+    prediction = torch.argmax(probs).item()
+    confidence = probs[prediction].item()
+
+    pred_label = "Benign" if confidence < 0.6 else label_map.get(prediction, "Unknown")
+
+
+    result = {     
+        ("url", url),
+        ("prediction", pred_label),
+        ("source", "model"),
+        ("confidence", round(confidence, 4))
+    }
+    return jsonify(result)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
