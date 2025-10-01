@@ -20,7 +20,7 @@ thresholds = {
     "Phishing": 0.9,
 }
 
-safe_domains = ["wikipedia.org", "github.com", "google.com", "stackoverflow.com"]
+safe_domains = ["wikipedia.org", "github.com", "google.com", "stackoverflow.com", "example.com"]
 
 def predict_model(url: str):
     if any(domain in url for domain in safe_domains):
