@@ -84,8 +84,19 @@ function App() {
               Scanify
             </span>
           </div>
-          {/* Right-side header content (empty for now) */}
-          <div></div>
+          <div
+          style={{
+            padding: "0 32px",
+            color: "#fef6f6ff",
+            fontSize: "16px",
+            display: "flex",
+          }}
+    >
+          <div>
+            <a href="#" style={{ color: "#fff", textDecoration: "none", marginRight: "30px"}}>About Scanify</a>
+            <a href="#" style={{ color: "#fff", textDecoration: "none" }}>Contact Us</a>
+          </div>
+          </div>
         </div>
       </header>
       
@@ -182,7 +193,7 @@ function App() {
               : result === "Defacement"
               ? "#ff9800"
               : result === "Phishing"
-              ? "#e53935"
+              ? "#e01916ff"
               : result === "Malware"
               ? "#6a1b9a"
               : "#fbc626ff",
@@ -450,6 +461,8 @@ function App() {
   </div>
 </div>
 </div>
+
+ {/* Footer Section */}
 <footer
         style={{
           width: "100%",
