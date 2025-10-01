@@ -11,7 +11,7 @@ function App() {
     setResult(null);
 
     try {
-      const response = await fetch("http://localhost:5000/predict", {
+      const response = await fetch("/predict", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -20,7 +20,7 @@ function App() {
       });
 
       const data = await response.json();
-      setResult(data.result);
+      setResult(data.prediction);
     } catch (error) {
       setResult("Error scanning URL");
     }
@@ -88,7 +88,8 @@ function App() {
           <div></div>
         </div>
       </header>
-
+      
+    {/* Main content  */}
       <div
   style={{
     width: "100%",
