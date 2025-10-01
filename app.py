@@ -1,18 +1,13 @@
 # app.py
 
 from flask import Flask, request, jsonify
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
-import torch
+from flask_cors import CORS
+from model import predict_model
+
 
 app = Flask(__name__)
+CORS(app)
 
-# Load the model and tokenizer
-model_name = "r3ddkahili/final-complete-malicious-url-model"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForSequenceClassification.from_pretrained(model_name)
-
-# Mapping prediction to labels
-label_map = {0: "Benign", 1: "Defacement", 2: "Phishing", 3: "Malware"}
 
 @app.route("/")
 def home():
@@ -21,23 +16,16 @@ def home():
 @app.route("/predict", methods=["POST"])
 def prediction():
     query = request.get_json()
-    url = query.get("url", "")
+    url = query.get("url") 
 
-    if not url:
+    if not query or not url:
         return jsonify({"error": "No URL provided"}), 400
 
-    # Tokenize the input URL
-    entry = tokenizer(url, return_tensors="pt", truncation=True, padding=True)
+    result = predict_model(url)
+    return jsonify(result)
 
-    # Get model predictions
-    with torch.no_grad():
-        outputs = model(**entry)
-
-    logits = outputs.logits
-    predicted_class_id = torch.argmax(logits, dim=1).item()
-    predicted_label = label_map[predicted_class_id]
-
-    return jsonify({"url": url, "prediction": predicted_label}) 
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
+
