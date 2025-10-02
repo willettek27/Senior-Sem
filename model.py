@@ -29,7 +29,6 @@ def predict_model(url: str):
         logits = outputs.logits
         pred_idx = torch.argmax(logits, dim=1).item()
         probs = torch.softmax(logits, dim=-1)[0]
-        confidence = probs[pred_idx].item()
 
     pred_label = label_map[pred_idx]
 
