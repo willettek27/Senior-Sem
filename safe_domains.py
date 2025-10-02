@@ -14,18 +14,30 @@ safe_domains = [
     "etsy.com", "bbc.com", "cnn.com", "nytimes.com", "hulu.com", "spotify.com",
     "dropbox.com",
 
-    # Educational and governmental sites
-        "harvard.edu", "stanford.edu", "mit.edu", "yale.edu", "princeton.edu",
-        "rockford.edu", "rockvalleycollege.edu"
-    
-    #Canvas
-    "instructure.com"
+    # Canvas and educational platforms
+    "instructure.com", "canvas.com", "blackboard.com", "moodle.org", "d2l.com",
 
+    # Study tools
+    "quizlet.com", "chegg.com", "coursehero.com", "khanacademy.org",
+    "scribd.com", "slader.com", "brainly.com", "kahoot.com", "kahoot.it",
+    "quizizz.com", "brilliant.org", "studystack.com",
+]
+
+safe_suffixes = [
+    "edu",  # Educational institutions
+    "gov",  # US Government
+    "mil",  # Military
 ]
 
 def safe_domain_check(url: str) -> bool:
 
     extracted = tldextract.extract(url)
     domain = f"{extracted.domain}.{extracted.suffix}"
-    return domain in safe_domains
+
+    if domain in safe_domains:
+        return True
+    if extracted.suffix in safe_suffixes:
+        return True
+
+    return False
 
