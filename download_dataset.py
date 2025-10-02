@@ -1,3 +1,11 @@
+# download_dataset.py
+
+''' 
+model.py automatically downloads the dataset, 
+but if you want to manually download it, 
+use this script. 
+'''
+
 import kagglehub
 
 # Download latest version
