@@ -4,7 +4,7 @@
 
 transformers
 torch
-kagglehub[pandas-datasets]
+kagglehub[hf-datasets]
 flask
 flask-cors
 tldextract
