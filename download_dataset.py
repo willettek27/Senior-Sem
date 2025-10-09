@@ -9,6 +9,6 @@ use this script.
 import kagglehub
 
 # Download latest version
-path = kagglehub.dataset_download("sid321axn/malicious-urls-dataset")
+path = kagglehub.dataset_download("shashwatwork/web-page-phishing-detection-dataset")
 
 print("Path to dataset files:", path)
