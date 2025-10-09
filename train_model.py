@@ -37,12 +37,11 @@ args = TrainingArguments(
 
     # Logging
     logging_dir="./logs",
-    logging_steps=1000,  # log every 1000 steps
-
+    logging_steps=100,              # log every 100 steps
+ 
     # Saving
     save_strategy="epoch",   # save at the end of each epoch
     save_total_limit=2,      # keep last 2 checkpoints
-    save_steps=10000,        # also save every 10000 steps
 
     # Optimization
     learning_rate=2e-5,
