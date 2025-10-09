@@ -5,14 +5,23 @@ import torch
 from kagglehub import KaggleDatasetAdapter, dataset_load
 from safe_domains import safe_domain_check
 
+# Detect device
+device = "cuda" if torch.cuda.is_available() else "cpu"
+print(f"Using device: {device}")
+
 # Load tokenizer & model
 model_name = "r3ddkahili/final-complete-malicious-url-model"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForSequenceClassification.from_pretrained(model_name)
+model = AutoModelForSequenceClassification.from_pretrained(model_name).to(device)
 model.eval()
 
-# Label map integer to string
-idx_to_label = {0: "Benign", 1: "Phishing"}
+# # Model predicts 4 classes, but we merge malware and defacement into "Phishing" for inference
+idx_to_label = {
+    0: "Benign", 
+    1: "Phishing",
+    2: "Phishing",  #Defacement merged into Phishing
+    3: "Phishing"   #Malware merged into Phishing
+}
 
 def predict_model(url: str):
 
@@ -23,15 +32,17 @@ def predict_model(url: str):
             "prediction": "Benign"
         }
 
-    # Tokenize input URL
+    # Tokenize input URL & moves to device
     inputs = tokenizer(url, return_tensors="pt", truncation=True, padding=True)
+    inputs = {k: v.to(device) for k, v in inputs.items()}
 
     # Model inference
     with torch.no_grad():
         logits = model(**inputs).logits
         pred_idx = torch.argmax(logits, dim=1).item()
 
-    prediction = idx_to_label[pred_idx]
+    #Fallback to Unknown if index is unexpected
+    prediction = idx_to_label.get(pred_idx,"Unknown")
 
     return {
         "url": url,
@@ -42,7 +53,7 @@ def predict_model(url: str):
 def load_dataset():
    file_path = "dataset_phishing.csv"
 
-   # Map string labels to integers
+   # 2-Label mapping
    label_to_idx = {
         "legitimate": 0,  # Benign 
         "phishing": 1     #Anything malicious: phishing
