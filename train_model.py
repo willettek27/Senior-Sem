@@ -30,15 +30,29 @@ train_ds, eval_ds = split["train"], split["test"]
 # Training setup
 args = TrainingArguments(
     output_dir="./results",
-    do_eval=True,
-    save_strategy="epoch",
     num_train_epochs=3,
     per_device_train_batch_size=16,
     per_device_eval_batch_size=16,
+    do_eval=True,
+
+    # Logging
+    logging_dir="./logs",
+    logging_steps=1000,  # log every 1000 steps
+
+    # Saving
+    save_strategy="epoch",   # save at the end of each epoch
+    save_total_limit=2,      # keep last 2 checkpoints
+    save_steps=10000,        # also save every 10000 steps
+
+    # Optimization
     learning_rate=2e-5,
     weight_decay=0.01,
-    logging_dir="./logs",
-    fp16=torch.cuda.is_available()
+
+     # Mixed precision
+    fp16=torch.cuda.is_available(),
+
+    # Reporting
+    report_to="none",
 )
 
 # Trainer and train
