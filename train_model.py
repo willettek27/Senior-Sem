@@ -13,7 +13,7 @@ model = AutoModelForSequenceClassification.from_pretrained(model_name, num_label
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 # Load dataset (2-label dataset mapped to 4-label space)
-label_map = {"legitimate": 0, "phishing": 2}
+label_map = {"legitimate": 0, "phishing": 1}
 dataset = dataset_load(
     KaggleDatasetAdapter.HUGGING_FACE,
     "shashwatwork/web-page-phishing-detection-dataset",
