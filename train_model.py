@@ -4,6 +4,7 @@ from kagglehub import KaggleDatasetAdapter, dataset_load
 import torch
 from sklearn.metrics import accuracy_score, f1_score, confusion_matrix
 import numpy as np
+import pandas as pd
 
 # Detect device
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -32,11 +33,21 @@ train_ds, eval_ds = split["train"], split["test"]
 
 #Compute Metrics to log eval metrics
 def compute_metrics(m):
-    preds = np.argmax(m.predictions, axis=1)
+    logits = m.predictions
     labels = m.label_ids
+
+    # phishing classes 1,2,3 into single phishing class
+    phishing_scores = logits[:, 1:].sum(axis=1)
+    two_class_scores = np.stack([logits[:, 0], phishing_scores], axis=1)
+
+    preds = np.argmax(two_class_scores, axis=1)
+
+    accuracy = accuracy_score(labels, preds)
+    f1 = f1_score(labels, preds, average="weighted")
+
     return {
-        "accuracy": accuracy_score(labels, preds),
-        "f1_weighted": f1_score(labels, preds, average="weighted"),
+        "accuracy": round(accuracy, 4),
+        "f1_weighted": round(f1, 4)
     }
 
 # Training setup
@@ -90,6 +101,18 @@ print("Eval results:", eval_results)
 
 # Calculate confusion matrix
 outputs = trainer.predict(eval_ds)
-pred_labels = np.argmax(outputs.predictions, axis=1)
-true_labels = outputs.label_ids
-print("Confusion Matrix:\n", confusion_matrix(true_labels, pred_labels))
+pred_labels = (np.argmax(outputs.predictions, axis=1)!=0).astype(int)
+true_labels = (outputs.label_ids !=0).astype(int)
+
+conf_matrix = confusion_matrix(true_labels, pred_labels)
+labels = ["legitimate", "phishing"]
+
+conf_matrix_df = pd.DataFrame(
+    conf_matrix,
+    index = [f"True_{label}" for label in labels],
+    columns = [f"Pred_{label}" for label in labels]
+
+)
+
+print("\nConfusion Matrix:\n")
+print(conf_matrix_df)
