@@ -29,7 +29,8 @@ def predict_model(url: str):
     if safe_domain_check(url):
         return {
             "url": url,
-            "prediction": "Benign"
+            "prediction": "Benign",
+            "confidence": 1.00
         }
 
     # Tokenize input URL & moves to device
@@ -39,7 +40,9 @@ def predict_model(url: str):
     # Model inference
     with torch.no_grad():
         logits = model(**inputs).logits
-        pred_idx = torch.argmax(logits, dim=1).item()
+        probs = torch.softmax(logits, dim=1)
+        pred_idx = torch.argmax(probs, dim=1).item()
+        confidence = probs[0, pred_idx].item()
 
     #Fallback to Unknown if index is unexpected
     prediction = idx_to_label.get(pred_idx,"Unknown")
@@ -47,6 +50,7 @@ def predict_model(url: str):
     return {
         "url": url,
         "prediction": prediction,
+        "confidence": round(confidence, 2)
     }
 
 # Load Hugging Face dataset
