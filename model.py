@@ -10,7 +10,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using device: {device}")
 
 # Load tokenizer & model
-model_name = "r3ddkahili/final-complete-malicious-url-model"
+model_name = "./final-malicious-url-model"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForSequenceClassification.from_pretrained(model_name).to(device)
 model.eval()
