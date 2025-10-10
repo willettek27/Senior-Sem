@@ -2,9 +2,19 @@
 # to add more libraries, just update requirements.txt and re-run
 # pip install -r requirements.txt
 
+
+# Core libraries
 transformers
 torch
+scikit-learn
+numpy
+
+# Kaggle dataset 
 kagglehub[hf-datasets]
+
+# Web app / API
 flask
 flask-cors
+
+# Extract domain and subdomain components from URLs
 tldextract
