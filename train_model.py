@@ -105,7 +105,7 @@ pred_labels = (np.argmax(outputs.predictions, axis=1)!=0).astype(int)
 true_labels = (outputs.label_ids !=0).astype(int)
 
 conf_matrix = confusion_matrix(true_labels, pred_labels)
-labels = ["legitimate", "phishing"]
+labels = ["benign", "malicious"]
 
 conf_matrix_df = pd.DataFrame(
     conf_matrix,
