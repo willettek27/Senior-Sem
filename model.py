@@ -10,17 +10,17 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using device: {device}")
 
 # Load tokenizer & model
-model_name = "r3ddkahili/final-complete-malicious-url-model"
+model_name = "final-malicious-url-model"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForSequenceClassification.from_pretrained(model_name).to(device)
 model.eval()
 
-# # Model predicts 4 classes, but we merge malware and defacement into "Phishing" for inference
+# # Model predicts 4 classes, but we merge malware, phishing, and defacement into "Maliccious" for inference
 idx_to_label = {
-    0: "Benign", 
-    1: "Phishing",
-    2: "Phishing",  #Defacement merged into Phishing
-    3: "Phishing"   #Malware merged into Phishing
+    0: "Benign",
+    1: "Malicious",  # Defacement → Malicious
+    2: "Malicious",  # Phishing → Malicious
+    3: "Malicious"   # Malware → Malicious
 }
 
 def predict_model(url: str):
@@ -60,14 +60,13 @@ def load_dataset():
    # 2-Label mapping
    label_to_idx = {
         "legitimate": 0,  # Benign 
-        "phishing": 1     #Anything malicious: phishing
+        "phishing": 1     # Malicious
     }
    
    dataset = dataset_load(
        KaggleDatasetAdapter.HUGGING_FACE,
        "shashwatwork/web-page-phishing-detection-dataset",
        file_path
-
    )
 
    dataset = dataset.map(lambda x: {"labels": label_to_idx[x["status"].lower()]})
@@ -80,7 +79,7 @@ if __name__ == "__main__":
     dataset = load_dataset()
 
     # Test the first URL from dataset
-    test_sample = dataset[0]
+    test_sample = dataset[1]
     url = test_sample["url"]
     correct_label_idx = test_sample["labels"]
     correct_label = idx_to_label[correct_label_idx]
