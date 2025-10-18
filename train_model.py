@@ -11,7 +11,7 @@ import pandas as pd
 # ===============================
 # "top20" → train using Top 20 features only
 # "all"   → train using all features
-TRAIN_MODE = "top20"
+TRAIN_MODE = "all"
 
 
 top20_features = ['google_index', 'page_rank', 'nb_hyperlinks', 'web_traffic', 'domain_age',
