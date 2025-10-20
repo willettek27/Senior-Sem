@@ -11,13 +11,13 @@ function App() {
     setResult(null);
 
     try {
-      const response = await fetch("/predict", {
+      const response = await fetch("http://127.0.0.1:5001/predict", {  // ⚠️ full backend URL
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ url }),
-      });
+  },
+  body: JSON.stringify({ url }),
+});
 
       const data = await response.json();
       setResult(data.prediction);
@@ -171,25 +171,17 @@ function App() {
             {loading ? "Scanning..." : "Scan"}
       </button>
 
-      {result && (
-        <p style={{
-          marginTop: "25px",
-          fontSize: "20px",
-          fontWeight: "bold",
-          color:
-            result === "Benign"
-              ? "green"
-              : result === "Defacement"
-              ? "#ff9800"
-              : result === "Phishing"
-              ? "#e53935"
-              : result === "Malware"
-              ? "#6a1b9a"
-              : "#fbc626ff",
-        }}>
-          Result: {result}
-        </p>
-      )}
+  {result && (
+    <p style={{
+     marginTop: "25px",
+     fontSize: "20px",
+     fontWeight: "bold",
+     color:
+      result.prediction === "Benign" ? "green" : "red"
+  }}>
+    Result: {result.prediction} (Confidence: {result.confidence})
+  </p>
+)}
 
     </div>
     <div style={{

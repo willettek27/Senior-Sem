@@ -5,7 +5,11 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/predict': 'http://localhost:5000', 
+      '/predict': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+        secure: false, // optional for local dev
+      },
     },
   },
 });
