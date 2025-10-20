@@ -119,12 +119,13 @@ trainer = Trainer(
     args=args,
     train_dataset=train_ds,
     eval_dataset=eval_ds,
-    processing_class=tokenizer,
+    tokenizer=tokenizer,
     compute_metrics=compute_metrics,
 )
 
 trainer.train()
 trainer.save_model(save_model_dir)
+tokenizer.save_pretrained(save_model_dir)
 print(f"✅ Fine-tuning complete — model saved to {save_model_dir}")
 
 

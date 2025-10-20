@@ -4,23 +4,34 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 from kagglehub import KaggleDatasetAdapter, dataset_load
 from safe_domains import safe_domain_check
+import os
+import sys
 
 # Detect device
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using device: {device}")
 
+# Path to your fine-tuned model
+model_name = "./fine-tuned-models/final-malicious-url-model-all"
+
+# ✅ Check if folder exists
+if not os.path.isdir(model_name):
+    print(f"❌ ERROR: Model folder not found at {model_name}")
+    sys.exit(1)
+
+
 # Load tokenizer & model
-model_name = "fine-tuned-models/final-malicious-url-model-all"
+model_name = "./fine-tuned-models/final-malicious-url-model-all"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForSequenceClassification.from_pretrained(model_name).to(device)
 model.eval()
 
+print("✅ Model and tokenizer loaded successfully!")
 # # Model predicts 4 classes, but we merge malware, phishing, and defacement into "Maliccious" for inference
 idx_to_label = {
     0: "Benign",
     1: "Malicious",  # Defacement → Malicious
-    2: "Malicious",  # Phishing → Malicious
-    3: "Malicious"   # Malware → Malicious
+    
 }
 
 def predict_model(url: str):
