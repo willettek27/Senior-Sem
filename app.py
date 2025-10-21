@@ -14,7 +14,7 @@ def home():
     return {"message": "API is running successfully."}
 
 @app.route("/predict", methods=["POST"])
-def prediction():
+def predict():
     query = request.get_json()
     url = query.get("url") 
 

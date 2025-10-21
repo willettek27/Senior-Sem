@@ -7,11 +7,12 @@ function App() {
   const [logoHover, setLogoHover] = useState(false);
 
   const handleScan = async () => {
+    if (!url) return;
     setLoading(true);
     setResult(null);
 
     try {
-      const response = await fetch("http://127.0.0.1:5001/predict", {  // ⚠️ full backend URL
+      const response = await fetch("/predict", { 
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -19,13 +20,19 @@ function App() {
   body: JSON.stringify({ url }),
 });
 
-      const data = await response.json();
-      setResult(data.prediction);
-    } catch (error) {
-      setResult("Error scanning URL");
-    }
+    const data = await response.json();
+    if (data.error) {
+      setResult({ prediction: "Error", confidence: 0 });
+    } else {
+      setResult(data);
+    }  } 
+    catch (error) {
+    console.error("Error:", error);
+    setResult({ prediction: "Error scanning URL", confidence: 0 });
+  } finally {
     setLoading(false);
-  };
+  }
+};
 
   return (
     <>
@@ -390,7 +397,7 @@ function App() {
       </p>
     </div>
   </div>
-\
+
   <div
     style={{
       display: "flex",
