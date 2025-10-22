@@ -1,152 +1,130 @@
+# =========================================
 # train_model.py
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, Trainer, TrainingArguments
-from kagglehub import KaggleDatasetAdapter, dataset_load
-import torch
+# Fine-tune DistilBERT on phishing dataset (URL + content)
+# =========================================
+
+from transformers import (
+    AutoTokenizer,
+    AutoModelForSequenceClassification,
+    Trainer,
+    TrainingArguments
+)
 from sklearn.metrics import accuracy_score, f1_score, confusion_matrix
+from datasets import load_dataset
 import numpy as np
 import pandas as pd
+import torch
+import os
 
-# ===============================
-# 1. Choose training mode
-# ===============================
-# "top20" → train using Top 20 features only
-# "all"   → train using all features
-TRAIN_MODE = "top20"
+# 1️⃣ CONFIGURATION
+MODEL_NAME = "distilbert-base-uncased"
+SAVE_MODEL_DIR = "./fine-tuned-models/final-distilbert-phishing"
+RESULTS_DIR = "./results-distilbert"
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
+print(f"🧠 Using device: {DEVICE}")
 
-top20_features = ['google_index', 'page_rank', 'nb_hyperlinks', 'web_traffic', 'domain_age',
-    'nb_www', 'phish_hints', 'ratio_intHyperlinks', 'longest_word_path', 'safe_anchor',
-    'ratio_extHyperlinks', 'ratio_digits_url', 'ratio_extRedirection', 'length_url',
-    'avg_word_path', 'longest_words_raw', 'length_words_raw', 'shortest_word_host',
-    'length_hostname', 'char_repeat']
+# 2️⃣ LOAD DATASET
+# Make sure your dataset CSV has columns: 'url', 'content', 'status'
+# status = "legitimate" or "phishing"
+DATA_PATH = "./dataset_phishing.csv"
+assert os.path.exists(DATA_PATH), f"❌ Dataset not found at {DATA_PATH}"
 
+df = pd.read_csv(DATA_PATH)
 
-# 3. Detect device
-device = "cuda" if torch.cuda.is_available() else "cpu"
-print(f"Using device: {device}")
-
-# 4. Load model and tokenizer
-model_name = "r3ddkahili/final-complete-malicious-url-model"
-model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=4).to(device)
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-
-
-# 5. Load dataset
+# Map labels to integers
 label_map = {"legitimate": 0, "phishing": 1}
-dataset = dataset_load(
-    KaggleDatasetAdapter.HUGGING_FACE,
-    "shashwatwork/web-page-phishing-detection-dataset",
-    "dataset_phishing.csv"
-)
+df["labels"] = df["status"].str.lower().map(label_map)
 
-# If Top 20, select only those columns + "status" for labels
-if TRAIN_MODE == "top20":
-    dataset = dataset.map(lambda x: {k: x[k] for k in top20_features + ["status"]})
+# Combine URL + content
+df["text"] = df["url"].fillna("") + " " + df["content"].fillna("")
 
-# Map labels
-dataset = dataset.map(lambda x: {"labels": label_map[x["status"].lower()]})
+# Convert to Hugging Face Dataset
+from datasets import Dataset
+dataset = Dataset.from_pandas(df[["text", "labels"]])
 
-# Tokenize
-dataset = dataset.map(
-    lambda x: tokenizer(x["url"], truncation=True, padding="max_length", max_length=128),
-    batched=True
-)
-
-dataset.set_format(type="torch", columns=["input_ids", "attention_mask", "labels"])
-
-
-# 6. Split dataset
-split = dataset.train_test_split(test_size=0.1)
+# 3️⃣ SPLIT DATASET
+split = dataset.train_test_split(test_size=0.1, seed=42)
 train_ds, eval_ds = split["train"], split["test"]
+print(f"✅ Dataset split: {len(train_ds)} train / {len(eval_ds)} eval")
 
+# 4️⃣ TOKENIZATION
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
-# 7. Compute Metrics
-def compute_metrics(m):
-    logits = m.predictions
-    labels = m.label_ids
+def tokenize_function(example):
+    return tokenizer(
+        example["text"],
+        truncation=True,
+        padding="max_length",
+        max_length=128
+    )
 
-    # Merge phishing classes (if needed)
-    phishing_scores = logits[:, 1:].sum(axis=1)
-    two_class_scores = np.stack([logits[:, 0], phishing_scores], axis=1)
-    preds = np.argmax(two_class_scores, axis=1)
+train_ds = train_ds.map(tokenize_function, batched=True)
+eval_ds = eval_ds.map(tokenize_function, batched=True)
+train_ds.set_format(type="torch", columns=["input_ids", "attention_mask", "labels"])
+eval_ds.set_format(type="torch", columns=["input_ids", "attention_mask", "labels"])
 
-    accuracy = accuracy_score(labels, preds)
-    f1 = f1_score(labels, preds, average="weighted")
+# 5️⃣ MODEL SETUP
+model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, num_labels=2).to(DEVICE)
 
+# 6️⃣ METRICS FUNCTION
+def compute_metrics(eval_pred):
+    logits, labels = eval_pred
+    preds = np.argmax(logits, axis=-1)
     return {
-        "accuracy": round(accuracy, 4),
-        "f1_weighted": round(f1, 4)
+        "accuracy": accuracy_score(labels, preds),
+        "f1_weighted": f1_score(labels, preds, average="weighted"),
     }
 
-# 8. Training setup
-# Folder names depend on TRAIN_MODE to avoid overwriting
-if TRAIN_MODE == "top20":
-    save_model_dir = "./final-malicious-url-model-top20"
-    results_dir = "./results-top20"
-else:
-    save_model_dir = "./final-malicious-url-model-all"
-    results_dir = "./results-all"
-
-args = TrainingArguments(
-    output_dir=results_dir,
-    num_train_epochs=3,
-    per_device_train_batch_size=16,
-    per_device_eval_batch_size=16,
-    eval_strategy="epoch",
-
-    # Logging
-    logging_dir="./logs",
-    logging_steps=100,
-
-    # Saving
-    save_strategy="epoch",
-    save_total_limit=2,
-
-    # Optimization
-    learning_rate=2e-5,
-    weight_decay=0.01,
-
-    # Mixed precision
-    fp16=torch.cuda.is_available(),
-
-    # Reporting
-    report_to="none",
+# 7️⃣ TRAINING ARGUMENTS
+    args = TrainingArguments(
+        output_dir=RESULTS_DIR,
+        num_train_epochs=3,
+        per_device_train_batch_size=16,
+        per_device_eval_batch_size=16,
+        evaluation_strategy="epoch",
+        logging_dir="./logs",
+        logging_steps=100,
+        save_strategy="epoch",
+        save_total_limit=2,
+        learning_rate=2e-5,
+        weight_decay=0.01,
+        fp16=torch.cuda.is_available(),
+        report_to="none",
 )
 
-# 9. Trainer and train
+# 8️⃣ TRAINER
 trainer = Trainer(
     model=model,
     args=args,
     train_dataset=train_ds,
     eval_dataset=eval_ds,
-    processing_class=tokenizer,
+    tokenizer=tokenizer,
     compute_metrics=compute_metrics,
 )
 
+# 9️⃣ TRAIN & SAVE
+print("🚀 Training started...")
 trainer.train()
-trainer.save_model(save_model_dir)
-print(f"✅ Fine-tuning complete — model saved to {save_model_dir}")
+trainer.save_model(SAVE_MODEL_DIR)
+tokenizer.save_pretrained(SAVE_MODEL_DIR)
+print(f"✅ Fine-tuning complete — model saved to {SAVE_MODEL_DIR}")
 
-
-# 10. Evaluation
-print("\nRunning final evaluation on validation set...")
+# 🔟 EVALUATION
+print("\n📊 Running evaluation on validation set...")
 eval_results = trainer.evaluate()
-print("\nEvaluation Complete ✅")
-print("Eval results:", eval_results)
+print("\n✅ Evaluation complete:")
+print(eval_results)
 
-# Confusion matrix
+# Confusion Matrix
 outputs = trainer.predict(eval_ds)
-pred_labels = (np.argmax(outputs.predictions, axis=1) != 0).astype(int)
-true_labels = (outputs.label_ids != 0).astype(int)
-
+pred_labels = np.argmax(outputs.predictions, axis=1)
+true_labels = outputs.label_ids
 conf_matrix = confusion_matrix(true_labels, pred_labels)
-labels = ["benign", "malicious"]
-
+labels = ["Benign", "Malicious"]
 conf_matrix_df = pd.DataFrame(
     conf_matrix,
-    index=[f"True_{label}" for label in labels],
-    columns=[f"Pred_{label}" for label in labels]
+    index=[f"True_{l}" for l in labels],
+    columns=[f"Pred_{l}" for l in labels]
 )
-
-print("\nConfusion Matrix:\n")
-print(conf_matrix_df)
+print("\nConfusion Matrix:\n", conf_matrix_df)
