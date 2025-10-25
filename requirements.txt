@@ -2,19 +2,30 @@
 # to add more libraries, just update requirements.txt and re-run
 # pip install -r requirements.txt
 
+# =========================================
+# Project requirements
+# =========================================
 
-# Core libraries
-transformers
+# Core ML libraries
 torch
+transformers
 scikit-learn
 numpy
+pandas
 
-# Kaggle dataset 
+# Hugging Face datasets
+datasets
 kagglehub[hf-datasets]
 
-# Web app / API
+# Web / API
 flask
 flask-cors
+requests
+beautifulsoup4
 
-# Extract domain and subdomain components from URLs
+# URL parsing / domain analysis
 tldextract
+whois
+
+# Utilities
+datetime
