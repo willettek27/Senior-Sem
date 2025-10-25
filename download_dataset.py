@@ -3,13 +3,6 @@
 # Download and move phishing dataset to /data
 # =========================================
 
-''' 
-model.py automatically downloads the dataset, 
-but if you want to manually download it, 
-use this script. 
-'''
-
-
 import os
 import shutil
 import kagglehub
