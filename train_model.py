@@ -157,3 +157,21 @@ model.bert.config.save_pretrained(SAVE_MODEL_DIR)
 
 print(f"✅ Model and tokenizer saved to {SAVE_MODEL_DIR}")
 print("Saved files:", sorted(os.listdir(SAVE_MODEL_DIR)))
+
+# -----------------------------
+# FINAL EVALUATION
+# -----------------------------
+print("\n📈 Evaluating model on validation set...")
+eval_results = trainer.evaluate(eval_ds)
+
+print("\n✅ Validation Results:")
+print(f"Accuracy: {eval_results['eval_accuracy']:.4f}")
+print(f"F1 (Weighted): {eval_results['eval_f1_weighted']:.4f}")
+
+# Save metrics to a text file for reference
+metrics_path = os.path.join(RESULTS_DIR, "validation_metrics.txt")
+with open(metrics_path, "w") as f:
+    f.write(f"Accuracy: {eval_results['eval_accuracy']:.4f}\n")
+    f.write(f"F1 (Weighted): {eval_results['eval_f1_weighted']:.4f}\n")
+
+print(f"\n📄 Validation metrics saved to: {metrics_path}")
