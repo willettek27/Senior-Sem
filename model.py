@@ -1,6 +1,6 @@
 # =========================================
 # model.py
-# Use fine-tuned DistilBERT + numeric features for phishing detection
+# Fine-tuned DistilBERT + numeric features for phishing detection
 # =========================================
 
 import os
@@ -25,12 +25,12 @@ print(f"🧠 Using device: {DEVICE}")
 # LOAD MODEL + TOKENIZER
 # -----------------------------
 MODEL_PATH = "./fine-tuned-models/final-distilbert-phishing"
+MODEL_NAME = "distilbert-base-uncased"
+NUMERIC_FEATURES_DIM = 87  # must match extract_features.py
+
 if not os.path.isdir(MODEL_PATH):
     print(f"❌ ERROR: Model not found at {MODEL_PATH}")
     sys.exit(1)
-
-MODEL_NAME = "distilbert-base-uncased"
-NUMERIC_FEATURES_DIM = 87  # must match extract_features.py
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
 
@@ -41,16 +41,16 @@ class DistilBERTWithFeatures(nn.Module):
         self.num_features_fc = nn.Linear(num_features, 32)
         self.classifier = nn.Linear(self.bert.config.hidden_size + 32, 2)
 
-    def forward(self, input_ids=None, attention_mask=None, numeric_features=None):
+    def forward(self, input_ids, attention_mask, numeric_features):
         cls_emb = self.bert(input_ids=input_ids, attention_mask=attention_mask).last_hidden_state[:, 0, :]
         num_feat_proj = self.num_features_fc(numeric_features)
         logits = self.classifier(torch.cat([cls_emb, num_feat_proj], dim=1))
         return logits
 
-# Load model weights
+# Initialize + load weights
 model = DistilBERTWithFeatures(MODEL_NAME, NUMERIC_FEATURES_DIM).to(DEVICE)
-
 model_file = os.path.join(MODEL_PATH, "model.safetensors")
+
 if not os.path.exists(model_file):
     print(f"❌ ERROR: Missing model file at {model_file}")
     sys.exit(1)
@@ -74,12 +74,9 @@ def normalize_url(url: str) -> str:
     scheme = parsed.scheme or "https"
     netloc = parsed.netloc or parsed.path
     path = parsed.path if parsed.netloc else ""
-    if not path:
-        path = "/"
-    return f"{scheme}://{netloc}{path}"
+    return f"{scheme}://{netloc or ''}{path or '/'}"
 
 def fetch_page_content(url: str) -> str:
-    """Fetch visible text content from a web page."""
     try:
         response = requests.get(url, timeout=6, headers={"User-Agent": "Mozilla/5.0"})
         if response.status_code != 200:
@@ -87,8 +84,7 @@ def fetch_page_content(url: str) -> str:
         soup = BeautifulSoup(response.text, "html.parser")
         for tag in soup(["script", "style", "noscript", "header", "footer", "meta", "link"]):
             tag.extract()
-        text = soup.get_text(separator=" ", strip=True)
-        return text[:1000]
+        return soup.get_text(separator=" ", strip=True)[:1000]
     except Exception:
         return ""
 
@@ -98,42 +94,38 @@ def fetch_page_content(url: str) -> str:
 def predict_model(url: str):
     url = normalize_url(url)
     page_text = fetch_page_content(url)
-
-    # Extract numeric features (same 87-dim order as training)
-    numeric_features = np.array(extract_features({"url": url}), dtype=np.float32)
-    numeric_features = torch.tensor([numeric_features], dtype=torch.float).to(DEVICE)
-
-    # Tokenize combined input
     combined_text = url + " " + page_text if page_text else url
-    inputs = tokenizer(
-        combined_text,
-        return_tensors="pt",
-        truncation=True,
-        padding="max_length",
-        max_length=128
-    )
+
+    # --- Numeric features
+    try:
+        numeric_features = np.array(extract_features({"url": url}), dtype=np.float32)
+        if numeric_features.shape[0] != NUMERIC_FEATURES_DIM:
+            raise ValueError("Unexpected feature dimension")
+    except Exception as e:
+        print(f"⚠️ Feature extraction failed: {e}")
+        numeric_features = np.zeros(NUMERIC_FEATURES_DIM, dtype=np.float32)
+
+    numeric_features = torch.from_numpy(numeric_features).unsqueeze(0).to(DEVICE)
+
+    # --- Tokenize
+    inputs = tokenizer(combined_text, return_tensors="pt", truncation=True,
+                       padding="max_length", max_length=128)
     inputs = {k: v.to(DEVICE) for k, v in inputs.items()}
 
-    # Inference
+    # --- Inference
     with torch.no_grad():
-        logits = model(
-            input_ids=inputs["input_ids"],
-            attention_mask=inputs["attention_mask"],
-            numeric_features=numeric_features
-        )
+        logits = model(**inputs, numeric_features=numeric_features)
         probs = torch.softmax(logits, dim=1)
-        benign_prob, malicious_prob = probs[0].tolist()
+        pred_idx = torch.argmax(probs, dim=1).item()
 
-    prediction = idx_to_label[int(malicious_prob > 0.5)]
-    confidence = round(max(benign_prob, malicious_prob), 3)
-
+    confidence = round(probs[0, pred_idx].item(), 3)
     return {
         "url": url,
-        "prediction": prediction,
+        "prediction": idx_to_label[pred_idx],
         "confidence": confidence,
         "raw_probs": {
-            "benign": round(benign_prob, 4),
-            "malicious": round(malicious_prob, 4)
+            "benign": round(probs[0, 0].item(), 4),
+            "malicious": round(probs[0, 1].item(), 4)
         },
         "used_content": len(page_text) > 0
     }
