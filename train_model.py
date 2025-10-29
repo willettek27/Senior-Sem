@@ -8,6 +8,7 @@ import torch
 import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score, f1_score
+from sklearn.model_selection import KFold, train_test_split
 from transformers import AutoTokenizer, Trainer, TrainingArguments
 from datasets import Dataset
 from extract_features import extract_features
@@ -22,7 +23,8 @@ MODEL_NAME = "distilbert-base-uncased"
 SAVE_MODEL_DIR = "./fine-tuned-models/final-distilbert-phishing"
 RESULTS_DIR = "./results-distilbert"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-NUMERIC_FEATURES_DIM = 87  # must match extract_features.py
+NUMERIC_FEATURES_DIM = 45  # must match extract_features.py
+N_FOLDS = 5
 
 os.makedirs(SAVE_MODEL_DIR, exist_ok=True)
 os.makedirs(RESULTS_DIR, exist_ok=True)
@@ -46,16 +48,20 @@ df_numeric = pd.DataFrame(numeric_features_array, columns=[f"f{i}" for i in rang
 df = pd.concat([df[["text", "labels"]], df_numeric], axis=1)
 
 # -----------------------------
-# CREATE HF DATASET
+# SPLIT TEST SET (1000 samples)
 # -----------------------------
-dataset = Dataset.from_pandas(df)
-split = dataset.train_test_split(test_size=0.1, seed=42)
-train_ds, eval_ds = split["train"], split["test"]
-print(f"✅ Dataset split: {len(train_ds)} train / {len(eval_ds)} eval")
+print("🔀 Splitting dataset into train/val and test sets...")
+test_size = 1000
+trainval_df, test_df = train_test_split(df, test_size=test_size, random_state=42, stratify=df["labels"])
+print(f"✅ Dataset split: {len(trainval_df)} train/validation / {len(test_df)} test")
+
+trainval_dataset = Dataset.from_pandas(trainval_df.reset_index(drop=True))
+test_dataset = Dataset.from_pandas(test_df.reset_index(drop=True))
 
 # -----------------------------
 # TOKENIZER
 # -----------------------------
+print("🔤 Initializing tokenizer...")
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
 def tokenize_and_add_features(example):
@@ -69,9 +75,6 @@ def tokenize_and_add_features(example):
     tokens["labels"] = example["labels"]
     return tokens
 
-train_ds = train_ds.map(tokenize_and_add_features, batched=False)
-eval_ds = eval_ds.map(tokenize_and_add_features, batched=False)
-
 # -----------------------------
 # DATA COLLATOR
 # -----------------------------
@@ -84,7 +87,7 @@ def collate_fn(batch):
     }
 
 # -----------------------------
-# MODEL
+# MODEL 
 # -----------------------------
 class DistilBERTWithFeatures(nn.Module):
     def __init__(self, base_model_name, num_features):
@@ -100,10 +103,8 @@ class DistilBERTWithFeatures(nn.Module):
         loss = nn.CrossEntropyLoss()(logits, labels) if labels is not None else None
         return {"loss": loss, "logits": logits}
 
-model = DistilBERTWithFeatures(MODEL_NAME, NUMERIC_FEATURES_DIM).to(DEVICE)
-
 # -----------------------------
-# METRICS
+# METRICS 
 # -----------------------------
 def compute_metrics(eval_pred):
     logits, labels = eval_pred
@@ -114,64 +115,110 @@ def compute_metrics(eval_pred):
     }
 
 # -----------------------------
-# TRAINING
+# K-FOLD CROSS VALIDATION
 # -----------------------------
-trainer = Trainer(
-    model=model,
+print("🔄 Starting K-Fold Cross-Validation...")
+kf = KFold(n_splits=N_FOLDS, shuffle=True, random_state=42)
+accuracies = []
+f1_scores = []
+
+trainval_dataset = trainval_dataset.shuffle(seed=42)
+
+for fold, (train_idx, val_idx) in enumerate(kf.split(trainval_dataset)):
+    print(f"\n===== Fold {fold + 1} / {N_FOLDS} =====")
+
+    fold_train_ds = trainval_dataset.select(train_idx).map(tokenize_and_add_features, batched=False)
+    fold_val_ds = trainval_dataset.select(val_idx).map(tokenize_and_add_features, batched=False)
+
+    model = DistilBERTWithFeatures(MODEL_NAME, NUMERIC_FEATURES_DIM).to(DEVICE)
+
+    k_trainer = Trainer(
+        model=model,
+        args=TrainingArguments(
+            output_dir=os.path.join(RESULTS_DIR, f"fold_{fold+1}"),
+            num_train_epochs=3,
+            per_device_train_batch_size=16,
+            per_device_eval_batch_size=16,
+            learning_rate=2e-5,
+            weight_decay=0.01,
+            fp16=torch.cuda.is_available(),
+            report_to="none",
+            save_strategy="no",
+        ),
+        train_dataset=fold_train_ds,
+        eval_dataset=fold_val_ds,
+        tokenizer=tokenizer,
+        compute_metrics=compute_metrics,
+        data_collator=collate_fn
+    )
+
+    k_trainer.train()
+    eval_results = k_trainer.evaluate(fold_val_ds)
+    accuracies.append(eval_results["eval_accuracy"])
+    f1_scores.append(eval_results["eval_f1_weighted"])
+    print(f"Fold {fold+1} -> Accuracy: {eval_results['eval_accuracy']:.4f}, F1: {eval_results['eval_f1_weighted']:.4f}")
+
+# Save K-fold metrics
+print("\n📊 K-Fold Cross-Validation Results:")
+kfold_results_path = os.path.join(RESULTS_DIR, "kfold_results.csv")
+pd.DataFrame({
+    "fold": list(range(1, N_FOLDS + 1)),
+    "accuracy": accuracies,
+    "f1_weighted": f1_scores
+}).to_csv(kfold_results_path, index=False)
+print(f"\n📄 K-Fold metrics saved to {kfold_results_path}")
+
+# -----------------------------
+# FINAL EVALUATION
+# -----------------------------
+print("\n📈 Evaluating final model on 1000-sample test set...")
+
+full_trainval_ds = trainval_dataset.map(tokenize_and_add_features, batched=False)
+final_model = DistilBERTWithFeatures(MODEL_NAME, NUMERIC_FEATURES_DIM).to(DEVICE)
+
+final_trainer = Trainer(
+    model=final_model,
     args=TrainingArguments(
-        output_dir=RESULTS_DIR,
+        output_dir=os.path.join(RESULTS_DIR, "final_model"),
         num_train_epochs=3,
         per_device_train_batch_size=16,
         per_device_eval_batch_size=16,
-        logging_dir="./logs",
-        logging_steps=100,
-        save_strategy="epoch",
-        save_total_limit=2,
         learning_rate=2e-5,
         weight_decay=0.01,
         fp16=torch.cuda.is_available(),
         report_to="none",
+        save_strategy="epoch",
+        save_total_limit=2
     ),
-    train_dataset=train_ds,
-    eval_dataset=eval_ds,
+    train_dataset=full_trainval_ds,
+    eval_dataset=test_dataset.map(tokenize_and_add_features, batched=False),
     tokenizer=tokenizer,
     compute_metrics=compute_metrics,
     data_collator=collate_fn
 )
 
-print("🚀 Training started...")
-trainer.train()
+final_trainer.train()
+test_results = final_trainer.evaluate(test_dataset.map(tokenize_and_add_features, batched=False))
+
+print("\n✅ Final Test Results (1000 samples):")
+print(f"Accuracy: {test_results['eval_accuracy']:.4f}")
+print(f"F1 (Weighted): {test_results['eval_f1_weighted']:.4f}")
 
 # -----------------------------
 # SAVE FINAL MODEL + TOKENIZER
 # -----------------------------
-print("💾 Saving final model and tokenizer...")
-
-# Save weights as safetensors
-model_path = os.path.join(SAVE_MODEL_DIR, "model.safetensors")
-save_file(model.state_dict(), model_path)
-
-# Save tokenizer and config files for from_pretrained()
+os.makedirs(SAVE_MODEL_DIR, exist_ok=True)
+save_file(final_model.state_dict(), os.path.join(SAVE_MODEL_DIR, "model.safetensors"))
 tokenizer.save_pretrained(SAVE_MODEL_DIR)
-model.bert.config.save_pretrained(SAVE_MODEL_DIR)
-
-print(f"✅ Model and tokenizer saved to {SAVE_MODEL_DIR}")
-print("Saved files:", sorted(os.listdir(SAVE_MODEL_DIR)))
+final_model.bert.config.save_pretrained(SAVE_MODEL_DIR)
+print(f"\n✅ Final model and tokenizer saved to {SAVE_MODEL_DIR}")
 
 # -----------------------------
-# FINAL EVALUATION
+# SAVE VALIDATION METRICS
 # -----------------------------
-print("\n📈 Evaluating model on validation set...")
-eval_results = trainer.evaluate(eval_ds)
-
-print("\n✅ Validation Results:")
-print(f"Accuracy: {eval_results['eval_accuracy']:.4f}")
-print(f"F1 (Weighted): {eval_results['eval_f1_weighted']:.4f}")
-
-# Save metrics to a text file for reference
 metrics_path = os.path.join(RESULTS_DIR, "validation_metrics.txt")
 with open(metrics_path, "w") as f:
-    f.write(f"Accuracy: {eval_results['eval_accuracy']:.4f}\n")
-    f.write(f"F1 (Weighted): {eval_results['eval_f1_weighted']:.4f}\n")
-
-print(f"\n📄 Validation metrics saved to: {metrics_path}")
+    f.write("Final Test Set Evaluation (1000 samples)\n")
+    f.write(f"Accuracy: {test_results['eval_accuracy']:.4f}\n")
+    f.write(f"F1 (Weighted): {test_results['eval_f1_weighted']:.4f}\n")
+print(f"📄 Validation metrics saved to {metrics_path}")
