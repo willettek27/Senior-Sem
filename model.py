@@ -26,7 +26,7 @@ print(f"🧠 Using device: {DEVICE}")
 # -----------------------------
 MODEL_PATH = "./fine-tuned-models/final-distilbert-phishing"
 MODEL_NAME = "distilbert-base-uncased"
-NUMERIC_FEATURES_DIM = 87  # must match extract_features.py
+NUMERIC_FEATURES_DIM = 45  # must match extract_features.py
 
 if not os.path.isdir(MODEL_PATH):
     print(f"❌ ERROR: Model not found at {MODEL_PATH}")
