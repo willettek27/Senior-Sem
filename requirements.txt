@@ -1,0 +1,29 @@
+# =========================================
+# Project requirements (Senior-Sem)
+# =========================================
+# To install: pip install -r requirements.txt
+# =========================================
+
+# Core ML libraries
+torch==2.2.2
+torchvision==0.17.2
+torchaudio==2.2.2
+numpy==1.26.4
+pandas==2.3.3
+scikit-learn==1.7.2
+transformers==4.57.1
+safetensors==0.6.2
+
+# Hugging Face datasets
+datasets==4.3.0
+kagglehub==0.3.13
+
+# Web / API
+flask==3.1.2
+flask-cors==6.0.1
+requests==2.32.5
+beautifulsoup4==4.14.2
+
+# URL parsing / domain analysis
+tldextract==5.3.0
+whois==1.20240129.2
