@@ -1,6 +1,0 @@
-
-# if user downloads dataset and wishes to keep it private
-# ignore everything in this directory except the .gitignore file
-
-*
-!.gitignore
