@@ -1,6 +1,7 @@
 # =========================================
 # train_model.py
 # Fine-tune DistilBERT + numeric features on phishing dataset
+# Supports switching between 45 features and all features
 # =========================================
 
 import os
@@ -20,15 +21,39 @@ from safetensors.torch import save_file
 # CONFIG
 # -----------------------------
 MODEL_NAME = "distilbert-base-uncased"
-SAVE_MODEL_DIR = "./fine-tuned-models/final-distilbert-phishing"
+SAVE_MODEL_DIR = "./fine-tuned-models/final-distilbert"
 RESULTS_DIR = "./results-distilbert"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-NUMERIC_FEATURES_DIM = 45  # must match extract_features.py
 N_FOLDS = 5
+    
+# Choose training mode: "45" or "all"
+TRAIN_MODE = "45"   
 
 os.makedirs(SAVE_MODEL_DIR, exist_ok=True)
 os.makedirs(RESULTS_DIR, exist_ok=True)
 print(f"🧠 Using device: {DEVICE}")
+
+# -----------------------------
+# FEATURE MODE HANDLER
+# -----------------------------
+def get_feature_subset(url, mode):
+    """
+    Extract numeric features for a given URL and mode.
+    Mode '45': use top 45 features.
+    Mode 'all': use all extracted features.
+    """
+    feats = extract_features({"url": url})
+    if mode == "45":
+        return feats[:45]  # use first 45
+    elif mode == "all":
+        return feats
+    else:
+        raise ValueError(f"Unknown TRAIN_MODE: {mode}")
+
+# Dynamically determine numeric feature dimension
+SAMPLE_FEATS = get_feature_subset("http://example.com", TRAIN_MODE)
+NUMERIC_FEATURES_DIM = len(SAMPLE_FEATS)
+print(f"🧩 Training mode: {TRAIN_MODE} ({NUMERIC_FEATURES_DIM} numeric features)")
 
 # -----------------------------
 # LOAD DATA
@@ -42,7 +67,7 @@ df["text"] = df["url"].fillna("")
 # EXTRACT NUMERIC FEATURES
 # -----------------------------
 print("📊 Extracting numeric features...")
-numeric_features = df["url"].apply(lambda url: extract_features({"url": url}))
+numeric_features = df["url"].apply(lambda url: get_feature_subset(url, TRAIN_MODE))
 numeric_features_array = np.stack(numeric_features.values)
 df_numeric = pd.DataFrame(numeric_features_array, columns=[f"f{i}" for i in range(NUMERIC_FEATURES_DIM)])
 df = pd.concat([df[["text", "labels"]], df_numeric], axis=1)
@@ -97,7 +122,7 @@ class DistilBERTWithFeatures(nn.Module):
         self.classifier = nn.Linear(self.bert.config.hidden_size + 32, 2)
 
     def forward(self, input_ids=None, attention_mask=None, numeric_features=None, labels=None):
-        cls_emb = self.bert(input_ids=input_ids, attention_mask=attention_mask).last_hidden_state[:,0,:]
+        cls_emb = self.bert(input_ids=input_ids, attention_mask=attention_mask).last_hidden_state[:, 0, :]
         num_feat_proj = self.num_features_fc(numeric_features)
         logits = self.classifier(torch.cat([cls_emb, num_feat_proj], dim=1))
         loss = nn.CrossEntropyLoss()(logits, labels) if labels is not None else None
@@ -160,7 +185,7 @@ for fold, (train_idx, val_idx) in enumerate(kf.split(trainval_dataset)):
 
 # Save K-fold metrics
 print("\n📊 K-Fold Cross-Validation Results:")
-kfold_results_path = os.path.join(RESULTS_DIR, "kfold_results.csv")
+kfold_results_path = os.path.join(RESULTS_DIR, f"kfold_results_{TRAIN_MODE}.csv")
 pd.DataFrame({
     "fold": list(range(1, N_FOLDS + 1)),
     "accuracy": accuracies,
@@ -179,7 +204,7 @@ final_model = DistilBERTWithFeatures(MODEL_NAME, NUMERIC_FEATURES_DIM).to(DEVICE
 final_trainer = Trainer(
     model=final_model,
     args=TrainingArguments(
-        output_dir=os.path.join(RESULTS_DIR, "final_model"),
+        output_dir=os.path.join(RESULTS_DIR, f"final_model_{TRAIN_MODE}"),
         num_train_epochs=3,
         per_device_train_batch_size=16,
         per_device_eval_batch_size=16,
@@ -208,7 +233,7 @@ print(f"F1 (Weighted): {test_results['eval_f1_weighted']:.4f}")
 # SAVE FINAL MODEL + TOKENIZER
 # -----------------------------
 os.makedirs(SAVE_MODEL_DIR, exist_ok=True)
-save_file(final_model.state_dict(), os.path.join(SAVE_MODEL_DIR, "model.safetensors"))
+save_file(final_model.state_dict(), os.path.join(SAVE_MODEL_DIR, f"model_{TRAIN_MODE}.safetensors"))
 tokenizer.save_pretrained(SAVE_MODEL_DIR)
 final_model.bert.config.save_pretrained(SAVE_MODEL_DIR)
 print(f"\n✅ Final model and tokenizer saved to {SAVE_MODEL_DIR}")
@@ -216,9 +241,9 @@ print(f"\n✅ Final model and tokenizer saved to {SAVE_MODEL_DIR}")
 # -----------------------------
 # SAVE VALIDATION METRICS
 # -----------------------------
-metrics_path = os.path.join(RESULTS_DIR, "validation_metrics.txt")
+metrics_path = os.path.join(RESULTS_DIR, f"validation_metrics_{TRAIN_MODE}.txt")
 with open(metrics_path, "w") as f:
-    f.write("Final Test Set Evaluation (1000 samples)\n")
+    f.write(f"Final Test Set Evaluation (1000 samples) - Mode: {TRAIN_MODE}\n")
     f.write(f"Accuracy: {test_results['eval_accuracy']:.4f}\n")
     f.write(f"F1 (Weighted): {test_results['eval_f1_weighted']:.4f}\n")
 print(f"📄 Validation metrics saved to {metrics_path}")
