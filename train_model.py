@@ -27,7 +27,7 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 N_FOLDS = 5
     
 # Choose training mode: "45" or "all"
-TRAIN_MODE = "all"   
+TRAIN_MODE = "45"   
 
 os.makedirs(SAVE_MODEL_DIR, exist_ok=True)
 os.makedirs(RESULTS_DIR, exist_ok=True)
