@@ -24,7 +24,7 @@ print(f"🧠 Using device: {DEVICE}")
 # -----------------------------
 # LOAD MODEL + TOKENIZER
 # -----------------------------
-MODEL_PATH = "./fine-tuned-models/final-distilbert-45"
+MODEL_PATH = "./fine-tuned-models/final-distilbert-45" # or final-distilbert-all
 MODEL_NAME = "distilbert-base-uncased"
 NUMERIC_FEATURES_DIM = 45  # must match extract_features.py
 
