@@ -16,9 +16,9 @@ Each URL in the dataset is represented by 87 extracted features from URL structu
 + **Frontend Interface:** React allows users to input URLs and recueve real-time detection results.
 
 ## Tech Stack
-**Frontend:** React
-**Backend:** Flask, Python
-**AI/ML:** Hugging Face Transformers (DistilBERT), PyTorch, NumPy, BeautifulSoup
++ **Frontend:** React
++ **Backend:** Flask, Python
++ **AI/ML:** Hugging Face Transformers (DistilBERT), PyTorch, NumPy, BeautifulSoup
 
 ## Prerequisites
 
