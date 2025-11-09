@@ -41,7 +41,7 @@ Install Python & Git
   
 --- 
 
-After installing, configure git with your name and email if user wishes to commit or push any changes  
+After installing, configure git with your name and email if you wish to commit or push any changes  
 
 Open Terminal
 ```bash
