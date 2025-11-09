@@ -27,34 +27,66 @@ Each URL in the dataset is represented by 87 extracted features from URL structu
 + Git
 + Flask
 + React
-+ AWS Amplify or Azure account (Optional)
 
-## Installation 
+## Installation (macOS/Windows)
 
+Install Python & Git 
+  - PYTHON:
+    - Install Python ≤ 3.12: https://www.python.org/downloads/release
+        - **NOTE FOR WINDOWS:** user must check "Add Python to PATH" during installation, or
+          system will NOT know where python is installed
+  - GIT:      
+      - For Mac: https://git-scm.com/download/mac
+      - For Windows: https://git-scm.com/download/win
+  
+--- 
 
+After installing, configure git with your name and email if user wishes to commit or push any changes  
 
+Open Terminal
+```bash
+git config --global user.name "Your Name"
+git config --global user.email "you@example.com"
+```
 
+Clone the repository:
 
+```bash
+git clone https://github.com/willettek27/Senior-Sem.git
+```
 
+Change to the project's directory:
+```bash
+cd Senior-Sem
+```
 
+Install Backend dependencies:
+```bash
+pip install -r requirements.txt
+```
 
-
-
-
-
+Install Frontend dependencies:
+```bash
+npm install
+```
 
 ## Usage
 
-### To start the Backend server
+To start the Backend server
 Run:
 ```bash
 python app.py
 ```
-### To Set up Frontend
+To Set up Frontend
 Run:
 ```bash
+cd Senior-Sem
 cd malicious-detector-frontend
-npm install
 npm run dev
+```
+
+Open your browser and visit http://localhost:5173/ to access the frontend web application.
+
+## Screenshots
 
 
