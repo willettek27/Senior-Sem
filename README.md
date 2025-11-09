@@ -11,9 +11,9 @@ The malicious URL detection system uses a hybrid AI model that merges text-based
 + **Data Ingestion & Dataset:** Uses the Kaggle Web page Phising Detection Dataset that contains 11,430 URLs, divided equally between 50% phishing and 50% benign URLs. The dataset serves as a benchmark for machine learning-based phishing detection systems.  
 Each URL in the dataset is represented by 87 extracted features from URL structure, webpage content, and external services.
 + **Data Feature Extraction:** Extracts 45 key numeric features alongside tokenized webpage content for input into the model.
-+ **Hybrid AI Model:** Combine text-based language understanding from the fine-tuned DistilBERT model with 45 numeric URL features.
++ **Hybrid AI Model:** Combines text-based language understanding from the fine-tuned DistilBERT model with 45 numeric URL features.
 + **Backend API:** The backend is implemented using Flask to access the data, process it, and return a result.
-+ **Frontend Interface:** React allows users to input URLs and recueve real-time detection results.
++ **Frontend Interface:** React allows users to input URLs and receive real-time detection results.
 
 ## Tech Stack
 + **Frontend:** React
@@ -22,32 +22,13 @@ Each URL in the dataset is represented by 87 extracted features from URL structu
 
 ## Prerequisites
 
-+ Python 3.12 (Some libraries incompatible with Python 3.13+)
-+ Node.js and npm
 + Git
++ Python 3.12 (Some dependencies are incompatible with Python 3.13+)
 + Flask
 + React
++ Node.js and npm
 
-## Installation (macOS/Windows)
-
-Install Python & Git 
-  - PYTHON:
-    - Install Python ≤ 3.12: https://www.python.org/downloads/release
-        - **NOTE FOR WINDOWS:** user must check "Add Python to PATH" during installation, or
-          system will NOT know where python is installed
-  - GIT:      
-      - For Mac: https://git-scm.com/download/mac
-      - For Windows: https://git-scm.com/download/win
-  
---- 
-
-After installing, configure git with your name and email if you wish to commit or push any changes  
-
-Open Terminal
-```bash
-git config --global user.name "Your Name"
-git config --global user.email "you@example.com"
-```
+## Installation
 
 Clone the repository:
 
