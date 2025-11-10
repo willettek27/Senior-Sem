@@ -36,66 +36,91 @@ function App() {
 
   return (
     <>
-      <header
+     <header
+  style={{
+    width: "100%",
+    background: "#bc667fff",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+    height: "80px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  }}
+>
+  <div
+    style={{
+      width: "100%",
+      maxWidth: "1100px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: "0 32px",
+    }}
+  >
+    {/* Logo */}
+    <div
+      style={{
+        width: "175px",
+        height: "55px",
+        background: logoHover ? "#ffffffff" : "#bc667fff",
+        border: "2px solid #fff",
+        borderRadius: "5px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        transition: "background 0.2s, box-shadow 0.2s",
+        boxShadow: logoHover ? "0 2px 8px rgba(0,0,0,0.12)" : "none",
+        marginRight: "16px",
+        cursor: "pointer",
+      }}
+      onMouseEnter={() => setLogoHover(true)}
+      onMouseLeave={() => setLogoHover(false)}
+    >
+      <span
         style={{
-          width: "100%",
-          background: "#bc667fff",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-          height: "80px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+          fontWeight: "bold",
+          fontSize: logoHover ? "1.5rem" : "2.5rem",
+          color: logoHover ? "#bc667fff" : "#fff",
+          letterSpacing: "3px",
+          fontFamily: "Segoe UI, Arial, sans-serif",
+          transition: "color 0.2s, transform 0.2s",
+          transform: logoHover ? "scale(1.15)" : "scale(1)",
+          userSelect: "none",
         }}
       >
-        <div
-          style={{
-            width: "100%",
-            maxWidth: "1100px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "0 32px",
-          }}
-        >
-          {/*logo code here*/}
-          <div
-            style={{
-              width: "175px",
-              height: "55px",
-              background: logoHover ? "#ffffffff" : "#bc667fff",
-              border: "2px solid #fff",
-              borderRadius: "5px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              transition: "background 0.2s, box-shadow 0.2s",
-              boxShadow: logoHover ? "0 2px 8px rgba(0,0,0,0.12)" : "none",
-              marginRight: "16px",
-              cursor: "pointer",
-            }}
-            onMouseEnter={() => setLogoHover(true)}
-            onMouseLeave={() => setLogoHover(false)}
-          >
-            <span
-              style={{
-                fontWeight: "bold",
-                fontSize: logoHover ? "1.5rem" : "2.5rem",
-                color: logoHover ? "#bc667fff" : "#fff",
-                letterSpacing: "3px",
-                fontFamily: "Segoe UI, Arial, sans-serif",
-                transition: "color 0.2s, transform 0.2s",
-                transform: logoHover ? "scale(1.15)" : "scale(1)",
-                userSelect: "none",
-              }}
-            >
-              Scanify
-            </span>
-          </div>
-          {/* Right-side header content (empty for now) */}
-          <div></div>
-        </div>
-      </header>
-      
+        Scanify
+      </span>
+    </div>
+
+    {/* Navigation Links */}
+    <div>
+      <a
+        href="#"
+        style={{
+          color: "#fff",
+          textDecoration: "none",
+          marginRight: "20px",
+          fontSize: "1.3rem", // <-- bigger text here
+          fontWeight: "500",
+        }}
+      >
+        About Us
+      </a>
+      <a
+        href="#"
+        style={{
+          color: "#fff",
+          textDecoration: "none",
+          fontSize: "1.3rem", // <-- bigger text here too
+          fontWeight: "500",
+        }}
+      >
+        Contact Us
+      </a>
+    </div>
+  </div>
+</header>
+
     {/* Main content  */}
       <div
   style={{
