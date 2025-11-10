@@ -70,9 +70,9 @@ Open your browser and visit http://localhost:5173/ to access the frontend web ap
 
 ## Screenshots
 <p align="center">
-  <img src="https://github.com/willettek27/Senior-Sem/raw/main/Picture1.png" width="600" alt="App Screenshot">
+  <img src="Screenshots/Benign Result.png" width="600" alt="App Screenshot">
 </p>
 <p align="center">
-  <img src="https://github.com/willettek27/Senior-Sem/raw/main/Malicious Result.png" width="600" alt="App Screenshot">
+  <img src="Screenshots/Malicious Result.png" width="600" alt="App Screenshot">
 </p>
 
