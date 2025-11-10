@@ -69,5 +69,8 @@ npm run dev
 Open your browser and visit http://localhost:5173/ to access the frontend web application.
 
 ## Screenshots
+<p align="center">
+  <img src="https://github.com/willettek27/Senior-Sem/raw/main/Picture1.png" width="600" alt="App Screenshot">
+</p>
 
 
