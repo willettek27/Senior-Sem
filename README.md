@@ -70,6 +70,9 @@ Open your browser and visit http://localhost:5173/ to access the frontend web ap
 
 ## Screenshots
 <p align="center">
+  <img src="Screenshots/Detect-Malicious.png" width="600" alt="App Screenshot">
+</p>
+<p align="center">
   <img src="Screenshots/Benign Result.png" width="600" alt="App Screenshot">
 </p>
 <p align="center">
